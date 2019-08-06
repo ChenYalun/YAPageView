@@ -9,10 +9,10 @@
 #import <UIKit/UIKit.h>
 
 @interface YAPageView : UIView
-@property (nonatomic, strong, readonly) UIScrollView *scrollView; ///< 内部UIScrollView
 @property (nonatomic, assign, readonly) CGFloat pageWidth;        ///< 页面宽度
 @property (nonatomic, assign, readonly) CGFloat pageInset;        ///< 页面间距
-@property (nonatomic, copy) NSArray <UIView *> *pageViewArray;    ///< page视图数组
+@property (nonatomic, copy) NSArray <UIImage *> *imageArray;      ///< 图片数组
+@property (nonatomic, copy) void (^tapHandler)(NSUInteger idx, UIImage *img);
 
 - (instancetype)initWithFrame:(CGRect)frame
                     pageWidth:(CGFloat)pageWidth
