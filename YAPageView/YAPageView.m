@@ -22,13 +22,17 @@
 
 //#define kLeft (_currentIndex - 1 + _imageArray.count) % _imageArray.count
 //#define kRight (_currentIndex + 1) % _imageArray.count
-#define kLeft _currentIndex == 0 ? _imageArray.count - 1 : _currentIndex - 1
-#define kRight _currentIndex == _imageArray.count - 1 ? 0 : _currentIndex + 1
+#define kCount (_configImageHandler ? _imageURLArray.count : _imageArray.count)
+#define kLeft (_currentIndex == 0 ? kCount - 1 : _currentIndex - 1)
+#define kRight (_currentIndex == kCount - 1 ? 0 : _currentIndex + 1)
 
 @interface YAPageView() <UIScrollViewDelegate>
 @property (nonatomic, assign) BOOL leftLock;
 @property (nonatomic, assign) BOOL rightLock;
+@property (nonatomic, assign) CGFloat pageWidth;
+@property (nonatomic, assign) CGFloat pageInset;
 @property (nonatomic, assign) NSUInteger currentIndex;
+@property (nonatomic, strong) NSTimer *timer;
 @property (nonatomic, strong) UIScrollView *scrollView;
 @property (nonatomic, copy)   NSArray <UIImageView *> *pageArray;
 @end
@@ -58,10 +62,24 @@
     return self;
 }
 
+- (void)willMoveToSuperview:(UIView *)newSuperview {
+    [super willMoveToSuperview:newSuperview];
+    if (newSuperview == nil) { // 视图从父视图移除时, 销毁定时器
+        [_timer invalidate];
+        _timer = nil;
+    }
+}
+
 - (void)refresh {
-    self.pageArray[0].image = self.imageArray[kLeft];
-    self.pageArray[1].image = self.imageArray[_currentIndex];
-    self.pageArray[2].image = self.imageArray[kRight];
+    if (self.configImageHandler) {
+        self.configImageHandler(self.pageArray[0], self.imageURLArray[kLeft]);
+        self.configImageHandler(self.pageArray[1], self.imageURLArray[_currentIndex]);
+        self.configImageHandler(self.pageArray[2], self.imageURLArray[kRight]);
+    } else {
+        self.pageArray[0].image = self.imageArray[kLeft];
+        self.pageArray[1].image = self.imageArray[_currentIndex];
+        self.pageArray[2].image = self.imageArray[kRight];
+    }
     CGFloat x = self.scrollView.contentOffset.x;
     CGFloat width = self.pageWidth + self.pageInset;
     if (x == 0) {
@@ -70,17 +88,13 @@
         x += x > width ? -width : width;
     }
     [self.scrollView setContentOffset:CGPointMake(x, 0)];
-    NSLog(@"刷新");
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
-    NSLog(@"%f", scrollView.contentOffset.x);
     CGFloat offsetX = self.scrollView.contentOffset.x;
     CGFloat width = CGRectGetWidth(self.scrollView.frame);
     // Turn left.
-    if (offsetX > 2 * (width - self.pageInset)) {
-        self.rightLock = NO;
-    }
+    if (offsetX > 2 * (width - self.pageInset)) self.rightLock = NO;
     if (!self.leftLock && offsetX < width - 2 * self.pageInset) {
         self.leftLock = YES;
         _currentIndex = kLeft;
@@ -103,12 +117,26 @@
     } else if (pointX > 2 * self.pageWidth + self.pageInset) {
         idx = kRight;
     }
-    if (self.tapHandler) self.tapHandler(idx, _imageArray[idx]);
+    if (self.tapHandler) self.tapHandler(idx, _imageArray[idx], _imageURLArray[idx]);
 }
 
 - (void)setImageArray:(NSArray<UIImage *> *)imageArray {
+    if (imageArray.count == 0) return;
     _imageArray = imageArray;
     [self refresh];
+}
+
+- (void)setImageURLArray:(NSArray<NSURL *> *)imageURLArray {
+    if (imageURLArray.count == 0) return;
+    _imageURLArray = imageURLArray;
+    [self refresh];
+}
+
+- (void)setTimeInterval:(CGFloat)timeInterval {
+    _timeInterval = timeInterval;
+    [_timer invalidate];
+    _timer = nil;
+    [NSRunLoop.currentRunLoop addTimer:self.timer forMode:NSRunLoopCommonModes];
 }
 
 - (NSArray <UIImageView *> *)pageArray {
@@ -130,6 +158,19 @@
     }
     return _pageArray;
 }
+
+- (NSTimer *)timer {
+    if (!_timer) {
+        _timer = [NSTimer timerWithTimeInterval:_timeInterval repeats:YES block:^(NSTimer *timer) {
+            [self.scrollView setContentOffset:CGPointMake(CGRectGetWidth(self.scrollView.frame) * 2, 0) animated:YES];
+        }];
+    }
+    return _timer;
+}
+
+- (void)dealloc {
+    NSLog(@"dealloc");
+}
 @end
 
 #pragma clang diagnostic pop
@@ -138,5 +179,5 @@
 // 无限循环处理
 // 点击事件处理
 // 自动轮播处理
-// 循环引用处理
+// 定时器\视图循环引用处理
 // 优化点总结: 取余运算 点击事件
