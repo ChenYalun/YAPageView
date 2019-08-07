@@ -1,9 +1,12 @@
 //
 //  YAPageView.h
-//  Aaron
+//  YAPageView <https://github.com/ChenYalun/YAPageView>
 //
 //  Created by Chen,Yalun on 2019/8/2.
 //  Copyright © 2019 Chen,Yalun. All rights reserved.
+//
+//  This source code is licensed under the MIT-style license found in the
+//  LICENSE file in the root directory of this source tree.
 //
 
 #import <UIKit/UIKit.h>
@@ -11,26 +14,24 @@
 @interface YAPageView : UIView
 
 /**
- 自动轮播时间间隔, 不设置则不自动轮播
+ Cyclic time interval. If it is not set, it will not play automatically.
  */
 @property (nonatomic, assign) CGFloat timeInterval;
 
 /**
- 本地图片数组
+ Local Pictures.
  */
 @property (nonatomic, copy) NSArray <UIImage *> *imageArray;
 
 /**
- 网络图片URL数组
+ Network picture URL array.
  */
 @property (nonatomic, copy) NSArray <NSURL *> *imageURLArray;
 
 /**
- 你应该先设置configImageHandler, 再设置imageURLArray.
- 视图会根据configImageHandler, 将URL配置到UIImageView上.
- 当设置imageURLArray后, imageArray将会失效.
- 
- 可以使用SDWebImage设置, 比如:
+ You should set configImageHandler first, then imageURLArray.
+
+ If you use SDWebImage, you can set it as follows:
  pageView.configImageHandler = ^(UIImageView *imageView, NSURL *url) {
      [imageView sd_setImageWithURL:url];
  };
@@ -38,7 +39,7 @@
 @property (nonatomic, copy) void (^configImageHandler)(UIImageView *imageView,NSURL *url);
 
 /**
- 视图点击回调, 如果是本地图片, url会为空, 当然, 如果是网络图片, img会为空
+ Click callback. Url will be nil if it is for local image, also, img will be nil if it is for network picture.
  */
 @property (nonatomic, copy) void (^tapHandler)(NSUInteger idx, UIImage *img, NSURL *url);
 

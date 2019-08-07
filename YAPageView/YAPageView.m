@@ -1,9 +1,12 @@
 //
 //  YAPageView.m
-//  Aaron
+//  YAPageView <https://github.com/ChenYalun/YAPageView>
 //
 //  Created by Chen,Yalun on 2019/8/2.
 //  Copyright © 2019 Chen,Yalun. All rights reserved.
+//
+//  This source code is licensed under the MIT-style license found in the
+//  LICENSE file in the root directory of this source tree.
 //
 
 #import "YAPageView.h"
@@ -109,6 +112,17 @@
     }
 }
 
+- (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
+    if (self.timeInterval != 0) {
+        [self.timer invalidate];
+        _timer = nil;
+    }
+}
+
+- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
+    [self setTimeInterval:_timeInterval];
+}
+
 - (void)handleTapGesture:(UITapGestureRecognizer *)tap {
     CGFloat pointX = [tap locationInView:tap.view].x;
     NSUInteger idx = _currentIndex;
@@ -167,17 +181,6 @@
     }
     return _timer;
 }
-
-- (void)dealloc {
-    NSLog(@"dealloc");
-}
 @end
 
 #pragma clang diagnostic pop
-
-// 间距处理
-// 无限循环处理
-// 点击事件处理
-// 自动轮播处理
-// 定时器\视图循环引用处理
-// 优化点总结: 取余运算 点击事件
