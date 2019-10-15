@@ -19,6 +19,11 @@
 @property (nonatomic, assign) CGFloat timeInterval;
 
 /**
+ Default NO.
+ */
+@property (nonatomic, assign) BOOL enableTransform3D;
+
+/**
  Local Pictures.
  */
 @property (nonatomic, copy) NSArray <UIImage *> *imageArray;

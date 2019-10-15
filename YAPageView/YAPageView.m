@@ -45,6 +45,12 @@
                     pageWidth:(CGFloat)pageWidth
                     pageInset:(CGFloat)pageInset {
     if (self = [super initWithFrame:frame]) {
+        if (pageWidth == 0) {
+            [[NSException exceptionWithName:NSInvalidArgumentException reason:@"page width can not be 0" userInfo:nil] raise];
+        }
+        if (pageInset <= 0) {
+            [[NSException exceptionWithName:NSInvalidArgumentException reason:@"page inset can not be <= 0" userInfo:nil] raise];
+        }
         _pageWidth = pageWidth;
         _pageInset = pageInset;
         _scrollView = ({
@@ -93,8 +99,23 @@
     [self.scrollView setContentOffset:CGPointMake(x, 0)];
 }
 
+- (void)refreshForTransform3DWithOffsetX:(CGFloat)offsetX {
+    if (!self.enableTransform3D) return;
+    CGFloat width = self.pageInset * 0.5 + self.pageWidth;
+    CGFloat h = 0.4; // 0.8 ~ 1.2
+    CGFloat off = (offsetX > width) ? offsetX - width : width - offsetX;
+    CGFloat scale = off / width * h;
+    CGFloat maxScale = 1 + h * 0.5;
+    CGFloat minScale = 1 - h * 0.5;
+    self.pageArray[0].layer.transform = CATransform3DMakeScale(1, minScale + scale, 1);
+    self.pageArray[1].layer.transform = CATransform3DMakeScale(1, maxScale - scale, 1);
+    self.pageArray[2].layer.transform = CATransform3DMakeScale(1, minScale + scale, 1);
+}
+
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
     CGFloat offsetX = self.scrollView.contentOffset.x;
+    [self refreshForTransform3DWithOffsetX:offsetX];
+    
     CGFloat width = CGRectGetWidth(self.scrollView.frame);
     // Turn left.
     if (offsetX > 2 * (width - self.pageInset)) self.rightLock = NO;
@@ -135,13 +156,13 @@
 }
 
 - (void)setImageArray:(NSArray<UIImage *> *)imageArray {
-    if (imageArray.count == 0) return;
+    if (imageArray.count < 3) return;
     _imageArray = imageArray;
     [self refresh];
 }
 
 - (void)setImageURLArray:(NSArray<NSURL *> *)imageURLArray {
-    if (imageURLArray.count == 0) return;
+    if (imageURLArray.count < 3) return;
     _imageURLArray = imageURLArray;
     [self refresh];
 }
@@ -151,6 +172,13 @@
     [_timer invalidate];
     _timer = nil;
     [NSRunLoop.currentRunLoop addTimer:self.timer forMode:NSRunLoopCommonModes];
+}
+
+- (void)setEnableTransform3D:(BOOL)enableTransform3D {
+    _enableTransform3D = enableTransform3D;
+    if (enableTransform3D) {
+        [self refreshForTransform3DWithOffsetX:self.pageWidth + self.pageInset];
+    }
 }
 
 - (NSArray <UIImageView *> *)pageArray {
