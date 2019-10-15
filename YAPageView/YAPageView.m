@@ -118,14 +118,14 @@
     
     CGFloat width = CGRectGetWidth(self.scrollView.frame);
     // Turn left.
-    if (offsetX > 2 * (width - self.pageInset)) self.rightLock = NO;
+    if (offsetX > 2 * (width - 2 * self.pageInset)) self.rightLock = NO;
     if (!self.leftLock && offsetX < width - 2 * self.pageInset) {
         self.leftLock = YES;
         _currentIndex = kLeft;
         [self refresh];
     }
     // Turn right.
-    if (offsetX < 2 * self.pageInset) self.leftLock = NO;
+    if (offsetX < 3 * self.pageInset) self.leftLock = NO;
     if (!self.rightLock && offsetX > width + 2 * self.pageInset) {
         self.rightLock = YES;
         _currentIndex = kRight;
